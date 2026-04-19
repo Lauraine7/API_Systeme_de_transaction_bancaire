@@ -31,7 +31,24 @@ app.use('/api-docs',swaggerUi.serve,swaggerUi.setup(swaggerDocs));
 app.use(express.json());
 // ── Route de test ──────────────────────
 app.get('/', (req, res) => {
-    res.json({ message: ' Bienvenue sur l\'API Bancaire Mobile !' });
+    res.send(`
+        <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #eee;">
+            <h1 style="color: #2c3e50;"> API </h1>
+            <p>Bienvenue sur votre système de gestion de transactions bancaires.</p>
+            <h2 style="color: #34495e;">Fonctionnalités :</h2>
+            <ul>
+                <li>Gestion des comptes bancaires (Création, Détails, Suppression)</li>
+                <li>Opérations de dépôt et de retrait</li>
+                <li>Transferts de fonds entre comptes</li>
+                <li>Historique complet des transactions</li>
+                <li>Gestion des statuts de compte</li>
+            </ul>
+            <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <strong> Documentation :</strong> 
+                <a href="/api-docs" style="color: #3498db; text-decoration: none; font-weight: bold;">Accéder au Swagger UI</a>
+            </div>
+        </div>
+    `);
 });
 
 /**
