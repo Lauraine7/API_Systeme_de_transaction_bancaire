@@ -47,6 +47,13 @@ const sauvegarderComptes = (comptes) => {
 
 const creerCompte = (nom, prenom, email, typeCompte = 'courant') => {
     const comptes = lireComptes();
+    // Validation du type de compte
+    if (!typeCompte) {
+        typeCompte = 'courant';
+    } else if (!['courant', 'epargne'].includes(typeCompte)) {
+        throw new Error('Type de compte invalide (doit être courant ou epargne)');
+    }
+
     const emailExiste = comptes.find(c => c.email === email);
     if (emailExiste) {
         throw new Error('Un compte avec cet email existe déjà');

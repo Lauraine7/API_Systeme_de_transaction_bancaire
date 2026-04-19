@@ -12,21 +12,69 @@ const swaggerOptions = {
         openapi: '3.0.0',
         info: {
             title: 'API Bancaire Mobile',
-            version:'1.0.0',
-            description:'Documentation de l\'API de transaction bancaire',
+            version: '1.0.0',
+            description: 'Documentation de l\'API de transaction bancaire',
         },
         servers: [
             {
-                url: '/',
-                description: 'Serveur de production',
+                url: 'https://api-systeme-de-transaction-bancaire.onrender.com',
+                description: 'Serveur de production (Render)',
+            },
+            {
+                url: 'http://localhost:4000',
+                description: 'Serveur local (développement)',
             },
         ],
-            
+        tags: [
+            { name: 'Accounts', description: 'Gestion des comptes bancaires' },
+            { name: 'Transactions', description: 'Opérations financières' }
+        ],
+        components: {
+            schemas: {
+                Account: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'integer' },
+                        nom: { type: 'string' },
+                        prenom: { type: 'string' },
+                        email: { type: 'string' },
+                        typeCompte: { type: 'string', enum: ['courant', 'epargne'] },
+                        solde: { type: 'number' },
+                        statut: { type: 'string', enum: ['actif', 'suspendu', 'fermé'] }
+                    }
+                },
+                Transaction: {
+                    type: 'object',
+                    properties: {
+                        type: { type: 'string' },
+                        montant: { type: 'number' },
+                        date: { type: 'string', format: 'date-time' },
+                        soldeApres: { type: 'number' }
+                    }
+                }
+            }
+        }
     },
     apis: ['./index.js'],
 };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs',swaggerUi.serve,swaggerUi.setup(swaggerDocs));
+// Dark mode CSS for Swagger UI
+const darkThemeOptions = {
+    customCss: `
+        .swagger-ui { background-color: #1b1b1b; color: #eee; }
+        .swagger-ui .info .title, .swagger-ui .info li, .swagger-ui .info p, .swagger-ui .info table, .swagger-ui .model-title, .swagger-ui .tab li { color: #eee; }
+        .swagger-ui .opblock.opblock-get { background: rgba(33, 150, 243, 0.1); border-color: #2196f3; }
+        .swagger-ui .opblock.opblock-post { background: rgba(76, 175, 80, 0.1); border-color: #4caf50; }
+        .swagger-ui .opblock.opblock-delete { background: rgba(244, 67, 54, 0.1); border-color: #f44336; }
+        .swagger-ui .opblock.opblock-patch { background: rgba(255, 152, 0, 0.1); border-color: #ff9800; }
+        .swagger-ui .opblock .opblock-summary-path { color: #eee; }
+        .swagger-ui .opblock .opblock-summary-description { color: #bbb; }
+        .swagger-ui .scheme-container { background: #1b1b1b; box-shadow: none; border-bottom: 1px solid #333; }
+        .swagger-ui select { background: #333; color: #eee; }
+        .swagger-ui .response-col_status, .swagger-ui .response-col_links { color: #eee; }
+    `
+};
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, darkThemeOptions));
 
 app.use(express.json());
 // ── Route de test ──────────────────────
@@ -51,27 +99,24 @@ app.get('/', (req, res) => {
     `);
 });
 
+
 /**
  * @swagger
- * /api/comptes:
+ * /comptes:
  *   post:
  *     summary: Créer un nouveau compte
+ *     tags: [Accounts]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               nom: { type: string }
- *               prenom: { type: string }
- *               email: { type: string }
- *               typeCompte: { type: string }
+ *             $ref: '#/components/schemas/Account'
  *     responses:
  *       201:
  *         description: Compte créé avec succès
  */
-app.post('/api/comptes', (req, res) => {
+app.post('/comptes', (req, res) => {
     const { nom, prenom, email, typeCompte } = req.body;
     try {
         if (!nom || !prenom || !email) {
@@ -89,14 +134,15 @@ app.post('/api/comptes', (req, res) => {
 
 /**
  * @swagger
- * /api/comptes:
+ * /comptes:
  *   get:
- *     summary: Obtenir la liste de tous les comptes
+ *     summary: Lister tous les comptes
+ *     tags: [Accounts]
  *     responses:
  *       200:
  *         description: Liste des comptes récupérée avec succès
  */
-app.get('/api/comptes', (req, res) => {
+app.get('/comptes', (req, res) => {
     const comptes = logic.getComptes();
     res.json({
         total: comptes.length,
@@ -106,9 +152,10 @@ app.get('/api/comptes', (req, res) => {
 
 /**
  * @swagger
- * /api/comptes/{id}:
+ * /comptes/{id}:
  *   get:
- *     summary: Obtenir les détails d'un compte spécifique
+ *     summary: Détails d'un compte
+ *     tags: [Accounts]
  *     parameters:
  *       - in: path
  *         name: id
@@ -122,7 +169,7 @@ app.get('/api/comptes', (req, res) => {
  *       404:
  *         description: Compte introuvable
  */
-app.get('/api/comptes/:id', (req, res) => {
+app.get('/comptes/:id', (req, res) => {
     const compte = logic.getCompte(req.params.id);
     if (!compte) {
         return res.status(404).json({ erreur: 'Compte introuvable' });
@@ -132,9 +179,65 @@ app.get('/api/comptes/:id', (req, res) => {
 
 /**
  * @swagger
- * /api/comptes/{id}/depot:
+ * /comptes/{id}/solde:
+ *   get:
+ *     summary: Consulter le solde d'un compte
+ *     tags: [Accounts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Solde du compte
+ */
+app.get('/comptes/:id/solde', (req, res) => {
+    const compte = logic.getCompte(req.params.id);
+    if (!compte) {
+        return res.status(404).json({ erreur: 'Compte introuvable' });
+    }
+    res.json({ 
+        compte: `${compte.nom} ${compte.prenom}`,
+        solde: `${compte.solde} FCFA` 
+    });
+});
+
+/**
+ * @swagger
+ * /comptes/{id}:
+ *   delete:
+ *     summary: Supprimer un compte
+ *     tags: [Accounts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Compte supprimé
+ */
+app.delete('/comptes/:id', (req, res) => {
+    try {
+        const compte = logic.supprimerCompte(req.params.id);
+        res.json({
+            message: `Compte ID ${compte.id} supprimé avec succès !`,
+            compte
+        });
+    } catch (error) {
+        res.status(error.message.includes('introuvable') ? 404 : 400).json({ erreur: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /comptes/{id}/depot:
  *   post:
- *     summary: Effectuer un dépôt sur un compte
+ *     summary: Effectuer un dépôt
+ *     tags: [Transactions]
  *     parameters:
  *       - in: path
  *         name: id
@@ -153,7 +256,7 @@ app.get('/api/comptes/:id', (req, res) => {
  *       200:
  *         description: Dépôt réussi
  */
-app.post('/api/comptes/:id/depot', (req, res) => {
+app.post('/comptes/:id/depot', (req, res) => {
     const { montant } = req.body;
     try {
         const { compte, transaction } = logic.deposer(req.params.id, montant);
@@ -169,9 +272,10 @@ app.post('/api/comptes/:id/depot', (req, res) => {
 
 /**
  * @swagger
- * /api/comptes/{id}/retrait:
+ * /comptes/{id}/retrait:
  *   post:
- *     summary: Effectuer un retrait sur un compte
+ *     summary: Effectuer un retrait
+ *     tags: [Transactions]
  *     parameters:
  *       - in: path
  *         name: id
@@ -189,10 +293,8 @@ app.post('/api/comptes/:id/depot', (req, res) => {
  *     responses:
  *       200:
  *         description: Retrait réussi
- *       422:
- *         description: Solde insuffisant
  */
-app.post('/api/comptes/:id/retrait', (req, res) => {
+app.post('/comptes/:id/retrait', (req, res) => {
     const { montant } = req.body;
     try {
         const { compte, transaction } = logic.retirer(req.params.id, montant);
@@ -209,9 +311,10 @@ app.post('/api/comptes/:id/retrait', (req, res) => {
 
 /**
  * @swagger
- * /api/transfert:
+ * /transfert:
  *   post:
- *     summary: Transférer de l'argent entre deux comptes
+ *     summary: Transférer de l'argent
+ *     tags: [Transactions]
  *     requestBody:
  *       required: true
  *       content:
@@ -226,7 +329,7 @@ app.post('/api/comptes/:id/retrait', (req, res) => {
  *       200:
  *         description: Transfert réussi
  */
-app.post('/api/transfert', (req, res) => {
+app.post('/transfert', (req, res) => {
     const { expediteurId, destinataireId, montant } = req.body;
     try {
         const { freshExpediteur, frais } = logic.transferer(expediteurId, destinataireId, montant);
@@ -244,9 +347,10 @@ app.post('/api/transfert', (req, res) => {
 
 /**
  * @swagger
- * /api/comptes/{id}/transactions:
+ * /comptes/{id}/transactions:
  *   get:
- *     summary: Voir l'historique des transactions d'un compte
+ *     summary: Historique des transactions
+ *     tags: [Transactions]
  *     parameters:
  *       - in: path
  *         name: id
@@ -257,7 +361,7 @@ app.post('/api/transfert', (req, res) => {
  *       200:
  *         description: Liste des transactions
  */
-app.get('/api/comptes/:id/transactions', (req, res) => {
+app.get('/comptes/:id/transactions', (req, res) => {
     try {
         const transactions = logic.getTransactions(req.params.id);
         res.json({
@@ -271,36 +375,10 @@ app.get('/api/comptes/:id/transactions', (req, res) => {
 
 /**
  * @swagger
- * /api/comptes/{id}:
- *   delete:
- *     summary: Supprimer un compte
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Compte supprimé
- */
-app.delete('/api/comptes/:id', (req, res) => {
-    try {
-        const compte = logic.supprimerCompte(req.params.id);
-        res.json({
-            message: `Compte ID ${compte.id} supprimé avec succès !`,
-            compte
-        });
-    } catch (error) {
-        res.status(error.message.includes('introuvable') ? 404 : 400).json({ erreur: error.message });
-    }
-});
-
-/**
- * @swagger
- * /api/comptes/{id}/statut:
+ * /comptes/{id}/statut:
  *   patch:
- *     summary: Changer le statut d'un compte (actif, suspendu, fermé)
+ *     summary: Changer le statut d'un compte
+ *     tags: [Accounts]
  *     parameters:
  *       - in: path
  *         name: id
@@ -318,12 +396,8 @@ app.delete('/api/comptes/:id', (req, res) => {
  *     responses:
  *       200:
  *         description: Statut mis à jour avec succès
- *       400:
- *         description: Statut invalide
- *       404:
- *         description: Compte introuvable
  */
-app.patch('/api/comptes/:id/statut', (req, res) => {
+app.patch('/comptes/:id/statut', (req, res) => {
     const { statut } = req.body;
     try {
         const compte = logic.changerStatut(req.params.id, statut);

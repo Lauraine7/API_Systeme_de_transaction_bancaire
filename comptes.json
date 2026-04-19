@@ -171,5 +171,82 @@
     "statut": "actif",
     "dateCreation": "2026-04-19T10:16:13.364Z",
     "transactions": []
+  },
+  {
+    "id": 9,
+    "nom": "Test",
+    "prenom": "User",
+    "email": "test@test.com",
+    "typeCompte": "courant",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:20:02.742Z",
+    "transactions": []
+  },
+  {
+    "id": 10,
+    "nom": "Invalid",
+    "prenom": "User",
+    "email": "invalid@test.com",
+    "typeCompte": "banane",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:20:02.757Z",
+    "transactions": []
+  },
+  {
+    "id": 11,
+    "nom": "Nom1",
+    "prenom": "Prenom1",
+    "email": "email1@test.com",
+    "typeCompte": "courant",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:20:42.243Z",
+    "transactions": []
+  },
+  {
+    "id": 12,
+    "nom": "Nom2",
+    "prenom": "Prenom2",
+    "email": "email2@test.com",
+    "typeCompte": "courant",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:20:42.244Z",
+    "transactions": []
+  },
+  {
+    "id": 13,
+    "nom": "Nom3",
+    "prenom": "Prenom3",
+    "email": "email3@test.com",
+    "typeCompte": "epargne",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:20:42.246Z",
+    "transactions": []
+  },
+  {
+    "id": 14,
+    "nom": "API",
+    "prenom": "Test",
+    "email": "api_test@test.com",
+    "typeCompte": "banane",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:21:02.022Z",
+    "transactions": []
+  },
+  {
+    "id": 15,
+    "nom": "API",
+    "prenom": "Test",
+    "email": "api_debug@test.com",
+    "typeCompte": "banane",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T15:21:40.082Z",
+    "transactions": []
   }
 ]
