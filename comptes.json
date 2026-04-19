@@ -1,0 +1,175 @@
+[
+  {
+    "id": 0,
+    "nom": "BANQUE",
+    "prenom": "CENTRALE",
+    "email": "banque@system.com",
+    "typeCompte": "service",
+    "solde": 40,
+    "statut": "actif",
+    "dateCreation": "2026-04-11T16:35:48.289Z",
+    "transactions": [
+      {
+        "type": "commission_transfert",
+        "de": 1,
+        "vers": 2,
+        "montantOriginal": 1000,
+        "frais": 10,
+        "date": "2026-04-11T16:35:48.315Z",
+        "soldeApres": 10
+      },
+      {
+        "type": "commission_transfert",
+        "de": 2,
+        "vers": 3,
+        "montantOriginal": 1000,
+        "frais": 10,
+        "date": "2026-04-11T16:37:32.507Z",
+        "soldeApres": 20
+      },
+      {
+        "type": "commission_transfert",
+        "de": 5,
+        "vers": 1,
+        "montantOriginal": 1000,
+        "frais": 10,
+        "date": "2026-04-15T16:45:32.897Z",
+        "soldeApres": 30
+      },
+      {
+        "type": "commission_transfert",
+        "de": 6,
+        "vers": 1,
+        "montantOriginal": 1000,
+        "frais": 10,
+        "date": "2026-04-15T16:46:50.429Z",
+        "soldeApres": 40
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "nom": "Atiwa",
+    "prenom": "Elsa",
+    "email": "elsa@test.com",
+    "typeCompte": "courant",
+    "solde": 405490,
+    "statut": "suspendu",
+    "dateCreation": "2026-04-11T16:13:28.009Z",
+    "transactions": [
+      {
+        "type": "depot",
+        "montant": 10000,
+        "date": "2026-04-11T16:13:28.032Z",
+        "soldeApres": 10000
+      },
+      {
+        "type": "transfert_envoye",
+        "vers": 2,
+        "montant": 2500,
+        "date": "2026-04-11T16:13:28.044Z",
+        "soldeApres": 7500
+      },
+      {
+        "type": "depot",
+        "montant": 400000,
+        "date": "2026-04-11T16:18:04.788Z",
+        "soldeApres": 407500
+      },
+      {
+        "type": "retrait",
+        "montant": 2000,
+        "date": "2026-04-11T16:19:17.299Z",
+        "soldeApres": 405500
+      },
+      {
+        "type": "transfert_envoye",
+        "vers": 2,
+        "montant": 1000,
+        "date": "2026-04-11T16:20:03.077Z",
+        "soldeApres": 404500
+      },
+      {
+        "type": "transfert_envoye",
+        "vers": 2,
+        "montant": 1000,
+        "frais": 10,
+        "date": "2026-04-11T16:35:48.315Z",
+        "soldeApres": 403490
+      },
+      {
+        "type": "transfert_recu",
+        "de": 5,
+        "montant": 1000,
+        "date": "2026-04-15T16:45:32.897Z",
+        "soldeApres": 404490
+      },
+      {
+        "type": "transfert_recu",
+        "de": 6,
+        "montant": 1000,
+        "date": "2026-04-15T16:46:50.429Z",
+        "soldeApres": 405490
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "nom": "Atiwa",
+    "prenom": "Elsi",
+    "email": "elsi@email.com",
+    "typeCompte": "courant",
+    "solde": 2000,
+    "statut": "actif",
+    "dateCreation": "2026-04-11T16:16:56.549Z",
+    "transactions": [
+      {
+        "type": "transfert_recu",
+        "de": 2,
+        "montant": 1000,
+        "date": "2026-04-11T16:22:33.029Z",
+        "soldeApres": 1000
+      },
+      {
+        "type": "transfert_recu",
+        "de": 2,
+        "montant": 1000,
+        "date": "2026-04-11T16:37:32.507Z",
+        "soldeApres": 2000
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "nom": "GWOS",
+    "prenom": "Christine",
+    "email": "christine@email.com",
+    "typeCompte": "courant",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-15T16:27:13.150Z",
+    "transactions": []
+  },
+  {
+    "id": 7,
+    "nom": "TIWA",
+    "prenom": "Prosper",
+    "email": "prosper@gmail.com",
+    "typeCompte": "epargne",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-15T16:49:58.567Z",
+    "transactions": []
+  },
+  {
+    "id": 8,
+    "nom": "Lauraine",
+    "prenom": "Lauraine",
+    "email": "lauraine@gmail.com",
+    "typeCompte": "epargne",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-19T10:16:13.364Z",
+    "transactions": []
+  }
+]
