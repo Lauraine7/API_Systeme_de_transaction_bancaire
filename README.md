@@ -1,20 +1,37 @@
 # 🏦 API Bancaire Mobile — ICT304
 
-API REST développée avec **Node.js + Express.js** permettant la gestion de comptes bancaires mobiles.
+API REST développée avec **Node.js + Express.js** permettant la gestion de comptes bancaires mobiles, avec une interface de commande (CLI) et une documentation Swagger complète.
 
 ---
 
 ## 🚀 Démarrage
 
+### 1. Installation
 ```bash
 # Installer les dépendances
 npm install
-
-# Lancer le serveur
-node index.js
 ```
 
+### 2. Lancer le serveur (API)
+```bash
+# Lancer le serveur
+npm start
+```
 Le serveur démarre sur : **http://localhost:4000**
+
+### 3. Lancer l'interface Menu (CLI)
+```bash
+# Lancer le menu interactif
+node menu.js
+```
+
+---
+
+## 📖 Documentation Swagger
+Une documentation interactive est disponible pour tester toutes les routes de l'API sans outils externes.
+
+*   **Local** : `http://localhost:4000/api-docs`
+*   **Production** : `https://api-systeme-de-transaction.onrender.com/api-docs`
 
 ---
 
@@ -23,61 +40,24 @@ Le serveur démarre sur : **http://localhost:4000**
 | Méthode | Route | Description |
 |---|---|---|
 | GET | `/` | Message de bienvenue |
-| POST | `/api/comptes` | Créer un compte |
+| GET | `/api-docs` | **Documentation Swagger** |
+| POST | `/api/comptes` | Créer un compte (`nom`, `prenom`, `email`, `typeCompte`) |
 | GET | `/api/comptes` | Lister tous les comptes |
 | GET | `/api/comptes/:id` | Détail d'un compte |
 | POST | `/api/comptes/:id/depot` | Effectuer un dépôt |
 | POST | `/api/comptes/:id/retrait` | Effectuer un retrait |
-| POST | `/api/transfert` | Transférer de l'argent |
+| POST | `/api/transfert` | Transférer de l'argent (Frais 1%) |
 | GET | `/api/comptes/:id/transactions` | Historique des transactions |
+| PATCH | `/api/comptes/:id/statut` | Changer le statut (actif, suspendu, fermé) |
+| DELETE | `/api/comptes/:id` | Supprimer un compte |
 
 ---
 
-## 🧪 Commandes de test
-
-### ✅ Tester que le serveur tourne
-```bash
-curl http://localhost:4000
-```
-
----
-
-### 👤 Créer un compte
-```bash
-curl -X POST http://localhost:4000/api/comptes \
--H "Content-Type: application/json" \
--d '{"nom": "Kuete", "prenom": "Elsa", "email": "elsa@email.com"}'
-```
-
----
-
-### 💰 Effectuer un dépôt
-```bash
-curl -X POST http://localhost:4000/api/comptes/1/depot \
--H "Content-Type: application/json" \
--d '{"montant": 5000}'
-```
-**Réponse :** `"nouveauSolde": "5000 FCFA"`
-
----
-
-### 💸 Effectuer un retrait
-```bash
-curl -X POST http://localhost:4000/api/comptes/1/retrait \
--H "Content-Type: application/json" \
--d '{"montant": 2000}'
-```
-
----
-
-### 🔄 Transférer de l'argent
-```bash
-curl -X POST http://localhost:4000/api/transfert \
--H "Content-Type: application/json" \
--d '{"expediteurId": 1, "destinataireId": 2, "montant": 1000}'
-```
-> [!NOTE]
-> Des frais de **1%** sont appliqués sur chaque transfert et sont débités de l'expéditeur.
+## 🌍 Déploiement
+Cette API est configurée pour être déployée sur **Render**.
+- **Build Command** : `npm install`
+- **Start Command** : `npm start`
+- **Var d'environnement** : `PORT` (géré automatiquement par Render)
 
 ---
 
@@ -85,9 +65,9 @@ curl -X POST http://localhost:4000/api/transfert \
 
 - **Runtime** : Node.js v22
 - **Framework** : Express.js 5
+- **Documentation** : Swagger (swagger-jsdoc & swagger-ui-express)
 - **Stockage** : Local (fichier `comptes.json`)
 - **Devise** : FCFA
-- **Format** : JSON
 
 ---
 
