@@ -39,6 +39,7 @@ const swaggerOptions = {
                         prenom: { type: 'string' },
                         email: { type: 'string' },
                         typeCompte: { type: 'string', enum: ['courant', 'epargne'] },
+                        codeBanque: { type: 'string', enum: ['UBA', 'ECO', 'AFB', 'BIC'], description: 'Code de la banque (UBA par défaut)' },
                         solde: { type: 'number' },
                         statut: { type: 'string', enum: ['actif', 'suspendu', 'fermé'] }
                     }
@@ -117,12 +118,12 @@ app.get('/', (req, res) => {
  *         description: Compte créé avec succès
  */
 app.post('/comptes', (req, res) => {
-    const { nom, prenom, email, typeCompte } = req.body;
+    const { nom, prenom, email, typeCompte, codeBanque } = req.body;
     try {
         if (!nom || !prenom || !email) {
             return res.status(400).json({ erreur: 'nom, prenom et email sont obligatoires' });
         }
-        const nouveauCompte = logic.creerCompte(nom, prenom, email, typeCompte);
+        const nouveauCompte = logic.creerCompte(nom, prenom, email, typeCompte, codeBanque);
         res.status(201).json({
             message: 'Compte créé avec succès !',
             compte: nouveauCompte
@@ -198,9 +199,9 @@ app.get('/comptes/:id/solde', (req, res) => {
     if (!compte) {
         return res.status(404).json({ erreur: 'Compte introuvable' });
     }
-    res.json({ 
+    res.json({
         compte: `${compte.nom} ${compte.prenom}`,
-        solde: `${compte.solde} FCFA` 
+        solde: `${compte.solde} FCFA`
     });
 });
 
@@ -415,3 +416,6 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
 });
+
+// Garde la boucle d'événements active si elle se vide anormalement
+setInterval(() => {}, 10000);

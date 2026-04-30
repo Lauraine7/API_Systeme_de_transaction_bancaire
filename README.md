@@ -1,6 +1,6 @@
-# 🏦 API Bancaire Mobile — ICT304
+# 🏦 API Bancaire Multibanque — ICT304
 
-API REST développée avec **Node.js + Express.js** permettant la gestion de comptes bancaires mobiles, avec une interface de commande (CLI) et une documentation Swagger complète.
+API REST développée avec **Node.js + Express.js** permettant la gestion de comptes sur plusieurs institutions financières, avec transferts interbancaires et commissions centralisées.
 
 ---
 
@@ -41,12 +41,12 @@ Une documentation interactive est disponible pour tester toutes les routes de l'
 |---|---|---|
 | GET | `/` | Message de bienvenue |
 | GET | `/api-docs` | **Documentation Swagger** |
-| POST | `/api/comptes` | Créer un compte (`nom`, `prenom`, `email`, `typeCompte`) |
-| GET | `/api/comptes` | Lister tous les comptes |
+| POST | `/api/comptes` | Créer un compte (`nom`, `prenom`, `email`, `typeCompte`, `codeBanque`) |
+| GET | `/api/comptes` | Lister tous les comptes (avec banque) |
 | GET | `/api/comptes/:id` | Détail d'un compte |
 | POST | `/api/comptes/:id/depot` | Effectuer un dépôt |
 | POST | `/api/comptes/:id/retrait` | Effectuer un retrait |
-| POST | `/api/transfert` | Transférer de l'argent (Frais 1%) |
+| POST | `/api/transfert` | Transférer (Gratuit intra-banque, 1% inter-banque) |
 | GET | `/api/comptes/:id/transactions` | Historique des transactions |
 | PATCH | `/api/comptes/:id/statut` | Changer le statut (actif, suspendu, fermé) |
 | DELETE | `/api/comptes/:id` | Supprimer un compte |
@@ -61,8 +61,20 @@ Cette API est configurée pour être déployée sur **Render**.
 
 ---
 
-## 🛠️ Stack technique
+## 🏦 Banques Supportées
+L'API accepte les codes banques suivants :
+- `UBA` : United Bank for Africa
+- `ECO` : Ecobank
+- `AFB` : Afriland First Bank
+- `BIC` : Bicec
 
+## ⚖️ Règles de Transfert
+- **Transfert Intra-banque** : Gratuit (0 FCFA de commission).
+- **Transfert Inter-banque** : Frais de **1%**, prélevés sur le compte expéditeur et reversés à la **Banque Centrale (ID 0)**.
+
+---
+
+## 🛠️ Stack technique
 - **Runtime** : Node.js v22
 - **Framework** : Express.js 5
 - **Documentation** : Swagger (swagger-jsdoc & swagger-ui-express)
@@ -70,5 +82,6 @@ Cette API est configurée pour être déployée sur **Render**.
 - **Devise** : FCFA
 
 ---
-
+*Accueil de l'API : https://api-systeme-de-transaction-bancaire.onrender.com
+Documentation interactive (Swagger UI) : https://api-systeme-de-transaction-bancaire.onrender.com/api-docs
 *ICT304 — Système de Transaction Bancaire Mobile | ATIWA KUETE Elsa Lauraine — 23V2352*

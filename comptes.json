@@ -5,7 +5,7 @@
     "prenom": "CENTRALE",
     "email": "banque@system.com",
     "typeCompte": "service",
-    "solde": 40,
+    "solde": 100,
     "statut": "actif",
     "dateCreation": "2026-04-11T16:35:48.289Z",
     "transactions": [
@@ -44,8 +44,45 @@
         "frais": 10,
         "date": "2026-04-15T16:46:50.429Z",
         "soldeApres": 40
+      },
+      {
+        "type": "commission_transfert",
+        "de": 16,
+        "vers": 18,
+        "montantOriginal": 1000,
+        "frais": 0,
+        "date": "2026-04-22T12:06:19.077Z",
+        "soldeApres": 40
+      },
+      {
+        "type": "commission_transfert",
+        "de": 16,
+        "vers": 17,
+        "montantOriginal": 1000,
+        "frais": 10,
+        "date": "2026-04-22T12:06:19.079Z",
+        "soldeApres": 50
+      },
+      {
+        "type": "commission_transfert",
+        "de": "19",
+        "vers": "7",
+        "montantOriginal": 5000,
+        "frais": 50,
+        "date": "2026-04-22T12:19:06.219Z",
+        "soldeApres": 100
+      },
+      {
+        "type": "commission_transfert",
+        "de": "7",
+        "vers": "9",
+        "montantOriginal": 200,
+        "frais": 0,
+        "date": "2026-04-22T12:20:06.144Z",
+        "soldeApres": 100
       }
-    ]
+    ],
+    "codeBanque": "CENTRAL"
   },
   {
     "id": 1,
@@ -111,7 +148,8 @@
         "date": "2026-04-15T16:46:50.429Z",
         "soldeApres": 405490
       }
-    ]
+    ],
+    "codeBanque": "UBA"
   },
   {
     "id": 3,
@@ -137,7 +175,8 @@
         "date": "2026-04-11T16:37:32.507Z",
         "soldeApres": 2000
       }
-    ]
+    ],
+    "codeBanque": "UBA"
   },
   {
     "id": 4,
@@ -148,7 +187,8 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-15T16:27:13.150Z",
-    "transactions": []
+    "transactions": [],
+    "codeBanque": "UBA"
   },
   {
     "id": 7,
@@ -156,10 +196,29 @@
     "prenom": "Prosper",
     "email": "prosper@gmail.com",
     "typeCompte": "epargne",
-    "solde": 0,
+    "solde": 4800,
     "statut": "actif",
     "dateCreation": "2026-04-15T16:49:58.567Z",
-    "transactions": []
+    "transactions": [
+      {
+        "type": "transfert_inter_recu",
+        "de": "19",
+        "banqueExp": "BIC",
+        "montant": 5000,
+        "date": "2026-04-22T12:19:06.219Z",
+        "soldeApres": 5000
+      },
+      {
+        "type": "transfert_intra_envoye",
+        "vers": "9",
+        "banqueDest": "UBA",
+        "montant": 200,
+        "frais": 0,
+        "date": "2026-04-22T12:20:06.144Z",
+        "soldeApres": 4800
+      }
+    ],
+    "codeBanque": "UBA"
   },
   {
     "id": 8,
@@ -170,7 +229,8 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-19T10:16:13.364Z",
-    "transactions": []
+    "transactions": [],
+    "codeBanque": "UBA"
   },
   {
     "id": 9,
@@ -178,10 +238,20 @@
     "prenom": "User",
     "email": "test@test.com",
     "typeCompte": "courant",
-    "solde": 0,
+    "solde": 200,
     "statut": "actif",
     "dateCreation": "2026-04-19T15:20:02.742Z",
-    "transactions": []
+    "transactions": [
+      {
+        "type": "transfert_intra_recu",
+        "de": "7",
+        "banqueExp": "UBA",
+        "montant": 200,
+        "date": "2026-04-22T12:20:06.144Z",
+        "soldeApres": 200
+      }
+    ],
+    "codeBanque": "UBA"
   },
   {
     "id": 10,
@@ -192,7 +262,8 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-19T15:20:02.757Z",
-    "transactions": []
+    "transactions": [],
+    "codeBanque": "UBA"
   },
   {
     "id": 11,
@@ -203,7 +274,8 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-19T15:20:42.243Z",
-    "transactions": []
+    "transactions": [],
+    "codeBanque": "UBA"
   },
   {
     "id": 12,
@@ -214,7 +286,8 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-19T15:20:42.244Z",
-    "transactions": []
+    "transactions": [],
+    "codeBanque": "UBA"
   },
   {
     "id": 13,
@@ -225,18 +298,8 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-19T15:20:42.246Z",
-    "transactions": []
-  },
-  {
-    "id": 14,
-    "nom": "API",
-    "prenom": "Test",
-    "email": "api_test@test.com",
-    "typeCompte": "banane",
-    "solde": 0,
-    "statut": "actif",
-    "dateCreation": "2026-04-19T15:21:02.022Z",
-    "transactions": []
+    "transactions": [],
+    "codeBanque": "UBA"
   },
   {
     "id": 15,
@@ -247,6 +310,163 @@
     "solde": 0,
     "statut": "actif",
     "dateCreation": "2026-04-19T15:21:40.082Z",
+    "transactions": [],
+    "codeBanque": "UBA"
+  },
+  {
+    "id": 16,
+    "nom": "Test",
+    "prenom": "UBA",
+    "email": "test_uba@bank.com",
+    "typeCompte": "courant",
+    "codeBanque": "UBA",
+    "solde": 7990,
+    "statut": "fermé",
+    "dateCreation": "2026-04-22T12:06:19.065Z",
+    "transactions": [
+      {
+        "type": "depot",
+        "montant": 10000,
+        "date": "2026-04-22T12:06:19.076Z",
+        "soldeApres": 10000
+      },
+      {
+        "type": "transfert_intra_envoye",
+        "vers": 18,
+        "banqueDest": "UBA",
+        "montant": 1000,
+        "frais": 0,
+        "date": "2026-04-22T12:06:19.077Z",
+        "soldeApres": 9000
+      },
+      {
+        "type": "transfert_inter_envoye",
+        "vers": 17,
+        "banqueDest": "ECO",
+        "montant": 1000,
+        "frais": 10,
+        "date": "2026-04-22T12:06:19.079Z",
+        "soldeApres": 7990
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "nom": "Test",
+    "prenom": "ECO",
+    "email": "test_eco@bank.com",
+    "typeCompte": "courant",
+    "codeBanque": "ECO",
+    "solde": 1000,
+    "statut": "actif",
+    "dateCreation": "2026-04-22T12:06:19.074Z",
+    "transactions": [
+      {
+        "type": "transfert_inter_recu",
+        "de": 16,
+        "banqueExp": "UBA",
+        "montant": 1000,
+        "date": "2026-04-22T12:06:19.079Z",
+        "soldeApres": 1000
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "nom": "Test",
+    "prenom": "UBA2",
+    "email": "test_uba2@bank.com",
+    "typeCompte": "courant",
+    "codeBanque": "UBA",
+    "solde": 1000,
+    "statut": "actif",
+    "dateCreation": "2026-04-22T12:06:19.075Z",
+    "transactions": [
+      {
+        "type": "transfert_intra_recu",
+        "de": 16,
+        "banqueExp": "UBA",
+        "montant": 1000,
+        "date": "2026-04-22T12:06:19.077Z",
+        "soldeApres": 1000
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "nom": "Brenda",
+    "prenom": "Brenda",
+    "email": "brenda@gmail.com",
+    "typeCompte": "epargne",
+    "codeBanque": "BIC",
+    "solde": 494950,
+    "statut": "actif",
+    "dateCreation": "2026-04-22T12:15:02.502Z",
+    "transactions": [
+      {
+        "type": "depot",
+        "montant": 500000,
+        "date": "2026-04-22T12:18:40.123Z",
+        "soldeApres": 500000
+      },
+      {
+        "type": "transfert_inter_envoye",
+        "vers": "7",
+        "banqueDest": "UBA",
+        "montant": 5000,
+        "frais": 50,
+        "date": "2026-04-22T12:19:06.219Z",
+        "soldeApres": 494950
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "nom": "lapa",
+    "prenom": "chelsy",
+    "email": "lapa@gmail.com",
+    "typeCompte": "courant",
+    "codeBanque": "UBA",
+    "solde": 999980000,
+    "statut": "actif",
+    "dateCreation": "2026-04-22T14:55:44.673Z",
+    "transactions": [
+      {
+        "type": "depot",
+        "montant": 1000000000,
+        "date": "2026-04-22T14:56:08.033Z",
+        "soldeApres": 1000000000
+      },
+      {
+        "type": "retrait",
+        "montant": 20000,
+        "date": "2026-04-22T14:56:38.199Z",
+        "soldeApres": 999980000
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "nom": "ee",
+    "prenom": "ee",
+    "email": "ee@gmail.com",
+    "typeCompte": "courant",
+    "codeBanque": "ECO",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-22T15:03:37.771Z",
+    "transactions": []
+  },
+  {
+    "id": 22,
+    "nom": "Fotio",
+    "prenom": "Prince",
+    "email": "Prince@gmail.com",
+    "typeCompte": "courant",
+    "codeBanque": "AFB",
+    "solde": 0,
+    "statut": "actif",
+    "dateCreation": "2026-04-30T07:10:39.926Z",
     "transactions": []
   }
 ]

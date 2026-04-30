@@ -3,6 +3,9 @@ const path = require('path');
 
 const DB_FILE = path.join(__dirname, 'comptes.json');
 
+const BANQUES_SUPPORTEES = ['UBA', 'ECO', 'AFB', 'BIC'];
+const BANQUE_DEFAUT = 'UBA';
+
 // Helper pour lire les comptes
 const lireComptes = () => {
     try {
@@ -29,6 +32,24 @@ const lireComptes = () => {
             comptes.unshift(compteBanque);
             fs.writeFileSync(DB_FILE, JSON.stringify(comptes, null, 2));
         }
+
+        // Migration : Ajouter codeBanque aux anciens comptes
+        let migrationFaite = false;
+        comptes = comptes.map(c => {
+            if (c.id !== 0 && !c.codeBanque) {
+                c.codeBanque = BANQUE_DEFAUT;
+                migrationFaite = true;
+            } else if (c.id === 0 && !c.codeBanque) {
+                c.codeBanque = 'CENTRAL';
+                migrationFaite = true;
+            }
+            return c;
+        });
+
+        if (migrationFaite) {
+            fs.writeFileSync(DB_FILE, JSON.stringify(comptes, null, 2));
+        }
+
         return comptes;
     } catch (error) {
         console.error("Erreur lors de la lecture des comptes :", error);
@@ -45,8 +66,14 @@ const sauvegarderComptes = (comptes) => {
     }
 };
 
-const creerCompte = (nom, prenom, email, typeCompte = 'courant') => {
+const creerCompte = (nom, prenom, email, typeCompte = 'courant', codeBanque = BANQUE_DEFAUT) => {
     const comptes = lireComptes();
+    
+    // Validation du code banque
+    if (!BANQUES_SUPPORTEES.includes(codeBanque)) {
+        throw new Error(`Banque non supportée. Banques valides : ${BANQUES_SUPPORTEES.join(', ')}`);
+    }
+
     // Validation du type de compte
     if (!typeCompte) {
         typeCompte = 'courant';
@@ -65,6 +92,7 @@ const creerCompte = (nom, prenom, email, typeCompte = 'courant') => {
         prenom,
         email,
         typeCompte,
+        codeBanque,
         solde: 0,
         statut: 'actif',
         dateCreation: new Date(),
@@ -167,19 +195,26 @@ const transferer = (expediteurId, destinataireId, montant) => {
         throw new Error(`Transfert impossible : le compte destinataire est ${comptes[indexDest].statut}`);
     }
 
-    // Calcul des frais (1%)
-    const frais = Math.round(montant * 0.01);
+    // Calcul des frais
+    // Inter-banque : 1% | Intra-banque : 0%
+    const estInterBanque = comptes[indexExp].codeBanque !== comptes[indexDest].codeBanque;
+    const frais = estInterBanque ? Math.round(montant * 0.01) : 0;
     const totalADebiter = montant + frais;
 
     if (comptes[indexExp].solde < totalADebiter) {
-        throw new Error(`Solde insuffisant pour couvrir le transfert et les frais (${frais} FCFA). Total nécessaire: ${totalADebiter} FCFA`);
+        const msgFrais = estInterBanque ? ` (incluant ${frais} FCFA de frais inter-banque)` : '';
+        throw new Error(`Solde insuffisant pour couvrir le transfert${msgFrais}. Total nécessaire: ${totalADebiter} FCFA`);
     }
+
+    // Mise à jour de l'historique avec le type de transfert
+    const typeTransfert = estInterBanque ? 'transfert_inter' : 'transfert_intra';
 
     // Débit expéditeur (Montant + Frais)
     comptes[indexExp].solde -= totalADebiter;
     comptes[indexExp].transactions.push({
-        type: 'transfert_envoye',
+        type: typeTransfert + '_envoye',
         vers: destinataireId,
+        banqueDest: comptes[indexDest].codeBanque,
         montant,
         frais,
         date: new Date(),
@@ -189,8 +224,9 @@ const transferer = (expediteurId, destinataireId, montant) => {
     // Crédit destinataire (Montant uniquement)
     comptes[indexDest].solde += montant;
     comptes[indexDest].transactions.push({
-        type: 'transfert_recu',
+        type: typeTransfert + '_recu',
         de: expediteurId,
+        banqueExp: comptes[indexExp].codeBanque,
         montant,
         date: new Date(),
         soldeApres: comptes[indexDest].solde
@@ -264,5 +300,6 @@ module.exports = {
     transferer,
     getTransactions,
     supprimerCompte,
-    changerStatut
+    changerStatut,
+    BANQUES_SUPPORTEES
 };

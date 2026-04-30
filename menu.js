@@ -32,9 +32,11 @@ const menuAction = async () => {
             const prenom = await question('Prénom : ');
             const email = await question('Email : ');
             const typeCompte = await question('Type (courant/epargne, défaut: courant) : ') || 'courant';
+            console.log('Banques disponibles : UBA, ECO, AFB, BIC');
+            const codeBanque = (await question('Code Banque (défaut: UBA) : ')).toUpperCase() || 'UBA';
             try {
-                const compte = logic.creerCompte(nom, prenom, email, typeCompte);
-                console.log(`Compte créé avec succès ! ID: ${compte.id}`);
+                const compte = logic.creerCompte(nom, prenom, email, typeCompte, codeBanque);
+                console.log(`Compte créé avec succès ! ID: ${compte.id} [${compte.codeBanque}]`);
             } catch (error) {
                 console.log(` Erreur : ${error.message}`);
             }
@@ -45,7 +47,8 @@ const menuAction = async () => {
             console.log('\n--- LISTE DES COMPTES ---');
             comptes.forEach(c => {
                 const labelStatut = c.statut === 'actif' ? 'ACTIF' : (c.statut === 'suspendu' ? 'SUSPENDU' : 'FERME');
-                console.log(`ID: ${c.id} | ${c.nom} ${c.prenom} |Type de compte: ${c.typeCompte} | Solde: ${c.solde} FCFA | Statut: ${labelStatut} | Email: ${c.email}`);
+                const banque = c.codeBanque || 'UBA';
+                console.log(`ID: ${c.id} | [${banque}] | ${c.nom} ${c.prenom} | Solde: ${c.solde} FCFA | Statut: ${labelStatut}`);
             });
             break;
 
@@ -93,10 +96,12 @@ const menuAction = async () => {
                     let detail = '';
                     if (t.type === 'depot') detail = `+${t.montant}`;
                     else if (t.type === 'retrait') detail = `-${t.montant}`;
-                    else if (t.type === 'transfert_envoye') detail = `→ Vers ID ${t.vers} : -${t.montant} (+${t.frais} frais)`;
-                    else if (t.type === 'transfert_recu') detail = `← De ID ${t.de} : +${t.montant}`;
-                    else if (t.type === 'commission_transfert') detail = `Commission : +${t.frais}`;
-                    
+                    else if (t.type.includes('transfert_inter_envoye')) detail = `→ Vers ID ${t.vers} [${t.banqueDest}] : -${t.montant} (+${t.frais} frais)`;
+                    else if (t.type.includes('transfert_intra_envoye')) detail = `→ Vers ID ${t.vers} [${t.banqueDest}] : -${t.montant} (Gratos)`;
+                    else if (t.type.includes('transfert_inter_recu')) detail = `← De ID ${t.de} [${t.banqueExp}] : +${t.montant}`;
+                    else if (t.type.includes('transfert_intra_recu')) detail = `← De ID ${t.de} [${t.banqueExp}] : +${t.montant}`;
+                    else if (t.type === 'commission_transfert') detail = `Commission (Inter-banque) : +${t.frais}`;
+
                     console.log(`[${date}] ${t.type.toUpperCase()}: ${detail} | Solde après: ${t.soldeApres}`);
                 });
             } catch (error) {
