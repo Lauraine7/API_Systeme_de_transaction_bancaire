@@ -32,7 +32,8 @@ Ce document définit les protocoles de tests manuels pour valider les fonctionna
     2. Tenter ensuite un retrait de `2000`.
 *   **Résultat Attendu** : 
     - Le premier essai échoue avec le message "Solde insuffisant".
-    - Le second essai réussit et le solde passe à `3000`.
+    - Le second essai réussit et le solde passe à `2980` (débit de 2000 + 1% de frais = 2020).
+    - La Banque Centrale est créditée de `20` de frais.
 
 ---
 

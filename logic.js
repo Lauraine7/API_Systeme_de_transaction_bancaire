@@ -150,27 +150,52 @@ const retirer = (id, montant) => {
 
     const comptes = lireComptes();
     const index = comptes.findIndex(c => c.id === parseInt(id));
+    const indexBanque = comptes.findIndex(c => c.id === 0);
+
+    if (index === -1) {
+        throw new Error('Compte introuvable');
+    }
 
     if (comptes[index].statut !== 'actif') {
         throw new Error(`Opération impossible : le compte est ${comptes[index].statut}`);
     }
 
-    if (comptes[index].solde < montant) {
-        throw new Error(`Solde insuffisant (${comptes[index].solde} FCFA)`);
+    // Frais de retrait fixes à 1%
+    const frais = Math.round(montant * 0.01);
+    const totalADebiter = montant + frais;
+
+    if (comptes[index].solde < totalADebiter) {
+        throw new Error(`Solde insuffisant (Nécessaire: ${totalADebiter} FCFA, Solde: ${comptes[index].solde} FCFA)`);
     }
 
-    comptes[index].solde -= montant;
+    // Débit du compte client (montant + frais)
+    comptes[index].solde -= totalADebiter;
 
     const transaction = {
         type: 'retrait',
         montant,
+        frais,
         date: new Date(),
         soldeApres: comptes[index].solde
     };
 
     comptes[index].transactions.push(transaction);
+
+    // Crédit du compte BANQUE CENTRALE (frais uniquement)
+    if (indexBanque !== -1) {
+        comptes[indexBanque].solde += frais;
+        comptes[indexBanque].transactions.push({
+            type: 'commission_retrait',
+            de: id,
+            montantOriginal: montant,
+            frais,
+            date: new Date(),
+            soldeApres: comptes[indexBanque].solde
+        });
+    }
+
     sauvegarderComptes(comptes);
-    return { compte: comptes[index], transaction };
+    return { compte: comptes[index], transaction, frais };
 };
 
 const transferer = (expediteurId, destinataireId, montant) => {

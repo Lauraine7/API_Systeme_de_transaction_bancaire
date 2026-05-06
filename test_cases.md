@@ -26,8 +26,8 @@ Ce document présente les cas de tests pour les 5 fonctionnalités clés du syst
 ## 3. Retrait de Fonds
 | ID | Description | Entrées | Résultat Attendu | Type |
 |---|---|---|---|---|
-| TC_03_01 | Retrait valide | ID: X, Montant: 2000 | Code 200, Solde débité, Nouveau retrait en historique | Fonctionnel |
-| TC_03_02 | Solde insuffisant | Montant > Solde | Code 422, Erreur "Solde insuffisant" | Fonctionnel |
+| TC_03_01 | Retrait valide | ID: X, Montant: 2000 | Code 200, Solde débité de 2020 (montant + 1% frais), Nouveau retrait en historique, Banque Centrale reçoit 1% | Fonctionnel |
+| TC_03_02 | Solde insuffisant | (Montant + 1%) > Solde | Code 422, Erreur "Solde insuffisant" | Fonctionnel |
 
 ---
 

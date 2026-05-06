@@ -5,7 +5,7 @@
     "prenom": "CENTRALE",
     "email": "banque@system.com",
     "typeCompte": "service",
-    "solde": 100,
+    "solde": 830,
     "statut": "actif",
     "dateCreation": "2026-04-11T16:35:48.289Z",
     "transactions": [
@@ -80,6 +80,46 @@
         "frais": 0,
         "date": "2026-04-22T12:20:06.144Z",
         "soldeApres": 100
+      },
+      {
+        "type": "commission_retrait",
+        "de": 23,
+        "montantOriginal": 1000,
+        "frais": 10,
+        "date": "2026-05-06T09:31:21.052Z",
+        "soldeApres": 110
+      },
+      {
+        "type": "commission_retrait",
+        "de": "20",
+        "montantOriginal": 2000,
+        "frais": 20,
+        "date": "2026-05-06T09:48:28.402Z",
+        "soldeApres": 130
+      },
+      {
+        "type": "commission_retrait",
+        "de": "20",
+        "montantOriginal": 20000,
+        "frais": 200,
+        "date": "2026-05-06T10:02:37.319Z",
+        "soldeApres": 330
+      },
+      {
+        "type": "commission_retrait",
+        "de": "20",
+        "montantOriginal": 20000,
+        "frais": 200,
+        "date": "2026-05-06T10:03:01.301Z",
+        "soldeApres": 530
+      },
+      {
+        "type": "commission_retrait",
+        "de": "20",
+        "montantOriginal": 30000,
+        "frais": 300,
+        "date": "2026-05-06T10:06:10.886Z",
+        "soldeApres": 830
       }
     ],
     "codeBanque": "CENTRAL"
@@ -427,7 +467,7 @@
     "email": "lapa@gmail.com",
     "typeCompte": "courant",
     "codeBanque": "UBA",
-    "solde": 999980000,
+    "solde": 999907280,
     "statut": "actif",
     "dateCreation": "2026-04-22T14:55:44.673Z",
     "transactions": [
@@ -442,6 +482,34 @@
         "montant": 20000,
         "date": "2026-04-22T14:56:38.199Z",
         "soldeApres": 999980000
+      },
+      {
+        "type": "retrait",
+        "montant": 2000,
+        "frais": 20,
+        "date": "2026-05-06T09:48:28.402Z",
+        "soldeApres": 999977980
+      },
+      {
+        "type": "retrait",
+        "montant": 20000,
+        "frais": 200,
+        "date": "2026-05-06T10:02:37.319Z",
+        "soldeApres": 999957780
+      },
+      {
+        "type": "retrait",
+        "montant": 20000,
+        "frais": 200,
+        "date": "2026-05-06T10:03:01.301Z",
+        "soldeApres": 999937580
+      },
+      {
+        "type": "retrait",
+        "montant": 30000,
+        "frais": 300,
+        "date": "2026-05-06T10:06:10.886Z",
+        "soldeApres": 999907280
       }
     ]
   },
@@ -468,5 +536,31 @@
     "statut": "actif",
     "dateCreation": "2026-04-30T07:10:39.926Z",
     "transactions": []
+  },
+  {
+    "id": 23,
+    "nom": "Test",
+    "prenom": "Withdrawal",
+    "email": "test_withdraw_1778059881040@example.com",
+    "typeCompte": "courant",
+    "codeBanque": "UBA",
+    "solde": 8990,
+    "statut": "actif",
+    "dateCreation": "2026-05-06T09:31:21.040Z",
+    "transactions": [
+      {
+        "type": "depot",
+        "montant": 10000,
+        "date": "2026-05-06T09:31:21.050Z",
+        "soldeApres": 10000
+      },
+      {
+        "type": "retrait",
+        "montant": 1000,
+        "frais": 10,
+        "date": "2026-05-06T09:31:21.052Z",
+        "soldeApres": 8990
+      }
+    ]
   }
 ]

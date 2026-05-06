@@ -298,10 +298,11 @@ app.post('/comptes/:id/depot', (req, res) => {
 app.post('/comptes/:id/retrait', (req, res) => {
     const { montant } = req.body;
     try {
-        const { compte, transaction } = logic.retirer(req.params.id, montant);
+        const { compte, transaction, frais } = logic.retirer(req.params.id, montant);
         res.json({
-            message: `Retrait de ${montant} FCFA effectué avec succès !`,
+            message: `Retrait de ${montant} FCFA effectué avec succès ! (Frais : ${frais} FCFA)`,
             nouveauSolde: `${compte.solde} FCFA`,
+            frais: `${frais} FCFA`,
             transaction
         });
     } catch (error) {

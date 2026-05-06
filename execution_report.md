@@ -13,7 +13,7 @@ L'application a évolué d'un système monobanque vers une architecture capable 
 ### Points Clés :
 - **Identification** : Chaque compte possède un code banque unique.
 - **Transversalité** : Les transferts entre banques différentes sont désormais possibles.
-- **Règles Fiscales** : Application automatique d'une commission de 1% sur les transferts interbancaires, au profit de la Banque Centrale (ID 0).
+- **Règles Fiscales** : Application automatique d'une commission de 1% sur les **retraits** et sur les **transferts interbancaires**, au profit de la Banque Centrale (ID 0).
 - **Gratuité** : Les transferts au sein d'une même banque restent gratuits (0 FCFA).
 
 ---
@@ -23,7 +23,7 @@ L'application a évolué d'un système monobanque vers une architecture capable 
 | Fonctionnalité | Cas de Tests | Statut | Observations |
 |---|---|---|---|
 | **Gestion de Compte** | TC_01_01 - 01_04 | ✅ PASS | Ajout réussi du champ `codeBanque`. |
-| **Dépôt & Retrait** | TC_02/03 | ✅ PASS | Opérations fluides et persistence JSON OK. |
+| **Dépôt & Retrait** | TC_02/03 | ✅ PASS | Opérations fluides, frais de 1% sur retrait bien appliqués. |
 | **Transfert Intra** | TC_04_01 | ✅ PASS | 0 FCFA de frais détectés (Même banque). |
 | **Transfert Inter** | TC_04_02 | ✅ PASS | 1% de frais débités de l'expéditeur. |
 | **Centralisation** | TC_04_03 | ✅ PASS | Compte ID 0 crédité des commissions. |

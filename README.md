@@ -68,7 +68,8 @@ L'API accepte les codes banques suivants :
 - `AFB` : Afriland First Bank
 - `BIC` : Bicec
 
-## ⚖️ Règles de Transfert
+## ⚖️ Règles Financières
+- **Retrait** : Frais de **1%** sur le montant du retrait, applicables à toutes les banques.
 - **Transfert Intra-banque** : Gratuit (0 FCFA de commission).
 - **Transfert Inter-banque** : Frais de **1%**, prélevés sur le compte expéditeur et reversés à la **Banque Centrale (ID 0)**.
 

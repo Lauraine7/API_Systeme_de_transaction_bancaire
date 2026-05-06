@@ -67,8 +67,8 @@ const menuAction = async () => {
             const idRetrait = await question('ID du compte : ');
             const montantRetrait = parseFloat(await question('Montant du retrait : '));
             try {
-                const { compte } = logic.retirer(idRetrait, montantRetrait);
-                console.log(` Retrait réussi ! Nouveau solde : ${compte.solde} FCFA`);
+                const { compte, frais } = logic.retirer(idRetrait, montantRetrait);
+                console.log(` Retrait réussi ! (Frais : ${frais} FCFA) Nouveau solde : ${compte.solde} FCFA`);
             } catch (error) {
                 console.log(` Erreur : ${error.message}`);
             }
@@ -95,12 +95,13 @@ const menuAction = async () => {
                     const date = new Date(t.date).toLocaleString('fr-FR');
                     let detail = '';
                     if (t.type === 'depot') detail = `+${t.montant}`;
-                    else if (t.type === 'retrait') detail = `-${t.montant}`;
+                    else if (t.type === 'retrait') detail = `-${t.montant} (Frais: ${t.frais} FCFA)`;
                     else if (t.type.includes('transfert_inter_envoye')) detail = `→ Vers ID ${t.vers} [${t.banqueDest}] : -${t.montant} (+${t.frais} frais)`;
                     else if (t.type.includes('transfert_intra_envoye')) detail = `→ Vers ID ${t.vers} [${t.banqueDest}] : -${t.montant} (Gratos)`;
                     else if (t.type.includes('transfert_inter_recu')) detail = `← De ID ${t.de} [${t.banqueExp}] : +${t.montant}`;
                     else if (t.type.includes('transfert_intra_recu')) detail = `← De ID ${t.de} [${t.banqueExp}] : +${t.montant}`;
-                    else if (t.type === 'commission_transfert') detail = `Commission (Inter-banque) : +${t.frais}`;
+                    else if (t.type === 'commission_transfert') detail = `Commission (Transfert) : +${t.frais}`;
+                    else if (t.type === 'commission_retrait') detail = `Commission (Retrait) : +${t.frais}`;
 
                     console.log(`[${date}] ${t.type.toUpperCase()}: ${detail} | Solde après: ${t.soldeApres}`);
                 });
