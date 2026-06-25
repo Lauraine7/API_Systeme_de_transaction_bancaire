@@ -6,7 +6,7 @@ import AccountCard from './AccountCard';
 import TransactionList from './TransactionList';
 import OperationModal from './OperationModal';
 
-const API_URL = 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const Dashboard = ({ comptes, refresh }) => {
   const { t, isAdmin } = useApp();

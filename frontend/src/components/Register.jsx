@@ -20,7 +20,7 @@ const Register = ({ onShowLogin }) => {
     setIsLoading(true);
     setError('');
     try {
-      await axios.post('http://localhost:4000/signup', { 
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/signup`, { 
         email, 
         password, 
         nom, 

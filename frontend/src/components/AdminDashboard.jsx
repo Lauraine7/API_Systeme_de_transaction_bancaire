@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import OperationModal from './OperationModal';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const AdminDashboard = ({ refresh }) => {
   const { t, theme, token, logout, isSuperAdmin } = useApp();
   const [stats, setStats] = useState(null);
@@ -20,9 +22,9 @@ const AdminDashboard = ({ refresh }) => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const [statsRes, usersRes, adminsRes] = await Promise.all([
-        axios.get('http://localhost:4000/admin/statistiques', config),
-        axios.get('http://localhost:4000/admin/comptes?type=USER', config),
-        axios.get('http://localhost:4000/admin/comptes?type=ADMIN', config)
+        axios.get(`${API_URL}/admin/statistiques`, config),
+        axios.get(`${API_URL}/admin/comptes?type=USER`, config),
+        axios.get(`${API_URL}/admin/comptes?type=ADMIN`, config)
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
@@ -172,8 +174,8 @@ const AdminDashboard = ({ refresh }) => {
               <AccountCard 
                 key={compte.id} 
                 compte={compte} 
-                onDelete={async (id) => { await axios.delete(`http://localhost:4000/admin/comptes/${id}`, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
-                onStatusChange={async (id, s) => { await axios.patch(`http://localhost:4000/admin/comptes/${id}`, { statut: s }, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
+                onDelete={async (id) => { await axios.delete(`${API_URL}/admin/comptes/${id}`, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
+                onStatusChange={async (id, s) => { await axios.patch(`${API_URL}/admin/comptes/${id}`, { statut: s }, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
               />
             ))}
           </div>
@@ -189,8 +191,8 @@ const AdminDashboard = ({ refresh }) => {
               <AccountCard 
                 key={compte.id} 
                 compte={compte} 
-                onDelete={async (id) => { await axios.delete(`http://localhost:4000/admin/comptes/${id}`, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
-                onStatusChange={async (id, s) => { await axios.patch(`http://localhost:4000/admin/comptes/${id}`, { statut: s }, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
+                onDelete={async (id) => { await axios.delete(`${API_URL}/admin/comptes/${id}`, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
+                onStatusChange={async (id, s) => { await axios.patch(`${API_URL}/admin/comptes/${id}`, { statut: s }, { headers: { Authorization: `Bearer ${token}` } }); handleRefresh(); }}
               />
             ))}
           </div>

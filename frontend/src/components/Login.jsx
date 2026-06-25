@@ -15,7 +15,7 @@ const Login = ({ onShowRegister }) => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await axios.post('http://localhost:4000/login', { email, password });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/login`, { email, password });
       login(response.data.user, response.data.token);
     } catch (err) {
       setError(err.response?.data?.erreur || t('error'));

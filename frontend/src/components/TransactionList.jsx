@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ArrowDownLeft, ArrowUpRight, Repeat, Percent } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
-const API_URL = 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const TransactionList = ({ accountId, refreshTrigger }) => {
   const { lang, t } = useApp();
