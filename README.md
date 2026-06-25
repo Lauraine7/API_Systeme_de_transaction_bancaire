@@ -85,4 +85,4 @@ L'API accepte les codes banques suivants :
 ---
 *Accueil de l'API : https://api-systeme-de-transaction-bancaire.onrender.com
 Documentation interactive (Swagger UI) : https://api-systeme-de-transaction-bancaire.onrender.com/api-docs
-*ICT304 — Système de Transaction Bancaire Mobile | ATIWA KUETE Elsa Lauraine — 23V2352*
+*ICT304 — Système de Transaction Bancaire Mobile | ATIWA KUETE Elsa Lauraine — 23V2352   *

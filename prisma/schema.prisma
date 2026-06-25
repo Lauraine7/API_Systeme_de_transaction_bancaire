@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id           Int           @id @default(autoincrement())
+  nom          String
+  prenom       String
+  email        String        @unique
+  typeCompte   String        @default("courant")
+  codeBanque   String        @default("UBA")
+  solde        Float         @default(0)
+  statut       String        @default("actif")
+  dateCreation DateTime      @default(now())
+  transactions Transaction[]
+  userId       Int?          @unique
+  user         User?         @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   @default("USER") // "USER" or "ADMIN"
+  createdAt DateTime @default(now())
+  account   Account?
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  type            String
+  montant         Float
+  frais           Float    @default(0)
+  date            DateTime @default(now())
+  soldeApres      Float
+  accountId       Int
+  account         Account  @relation(fields: [accountId], references: [id])
+  destinataireId  Int?
+  expediteurId    Int?
+  banqueTiers     String?
+  montantOriginal Float?
+}

@@ -1,0 +1,36 @@
+
+> banque-api@1.0.0 coverage
+> vitest --run --coverage tests/
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v1.6.1 /home/atiwa/Bureau/ICT_304/banque-api
+      Coverage enabled with v8
+
+ ✓ tests/tests_unitaires/banque.test.js  (8 tests) 167ms
+stdout | tests/tests_integration/api.test.js > Tests d'Intégration API pour 100% Coverage > 4. Transferts et Erreurs
+DEBUG TRANSFER ERROR: Solde insuffisant pour couvrir le transfert (incluant 10000 FCFA de frais inter-banque). Total nécessaire: 1009999 FCFA
+
+stdout | tests/tests_integration/api.test.js > Tests d'Intégration API pour 100% Coverage > 4. Transferts et Erreurs
+DEBUG TRANSFER ERROR: Compte expéditeur introuvable
+
+ ✓ tests/tests_integration/api.test.js  (5 tests) 537ms
+ ✓ tests/tests_unitaires/auth.test.js  (10 tests) 507ms
+
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+   Start at  08:58:40
+   Duration  1.92s (transform 39ms, setup 1ms, collect 325ms, tests 1.21s, environment 0ms, prepare 141ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   94.87 |    86.75 |     100 |   94.87 |                   
+ banque-api        |   94.89 |    86.66 |     100 |   94.89 |                   
+  auth.js          |     100 |      100 |     100 |     100 |                   
+  index.js         |   93.32 |    71.05 |     100 |   93.32 | ...55-458,502-503 
+  logic.js         |   95.89 |    90.66 |     100 |   95.89 | 13-25             
+ ...api/middleware |   94.44 |     87.5 |     100 |   94.44 |                   
+  ...Middleware.js |   94.44 |     87.5 |     100 |   94.44 | 21-22             
+-------------------|---------|----------|---------|---------|-------------------

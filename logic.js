@@ -1,74 +1,32 @@
-const fs = require('fs');
-const path = require('path');
-
-const DB_FILE = path.join(__dirname, 'comptes.json');
+const prisma = require('./prismaClient');
 
 const BANQUES_SUPPORTEES = ['UBA', 'ECO', 'AFB', 'BIC'];
 const BANQUE_DEFAUT = 'UBA';
 
-// Helper pour lire les comptes
-const lireComptes = () => {
-    try {
-        if (!fs.existsSync(DB_FILE)) {
-            fs.writeFileSync(DB_FILE, JSON.stringify([]));
-            return [];
-        }
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        let comptes = JSON.parse(data);
-
-        // Assurer que le compte Banque ID 0 existe
-        if (!comptes.find(c => c.id === 0)) {
-            const compteBanque = {
+/**
+ * Initialisation : Assure que le compte banquier (Banque Centrale) existe en DB.
+ * Appelé au démarrage ou lors du premier accès.
+ */
+const assurerBanqueCentrale = async () => {
+    let banqueCentrale = await prisma.account.findUnique({ where: { id: 0 } });
+    if (!banqueCentrale) {
+        banqueCentrale = await prisma.account.create({
+            data: {
                 id: 0,
                 nom: "BANQUE",
                 prenom: "CENTRALE",
                 email: "banque@system.com",
                 typeCompte: "service",
+                codeBanque: "CENTRAL",
                 solde: 0,
-                statut: "actif",
-                dateCreation: new Date(),
-                transactions: []
-            };
-            comptes.unshift(compteBanque);
-            fs.writeFileSync(DB_FILE, JSON.stringify(comptes, null, 2));
-        }
-
-        // Migration : Ajouter codeBanque aux anciens comptes
-        let migrationFaite = false;
-        comptes = comptes.map(c => {
-            if (c.id !== 0 && !c.codeBanque) {
-                c.codeBanque = BANQUE_DEFAUT;
-                migrationFaite = true;
-            } else if (c.id === 0 && !c.codeBanque) {
-                c.codeBanque = 'CENTRAL';
-                migrationFaite = true;
+                statut: "actif"
             }
-            return c;
         });
-
-        if (migrationFaite) {
-            fs.writeFileSync(DB_FILE, JSON.stringify(comptes, null, 2));
-        }
-
-        return comptes;
-    } catch (error) {
-        console.error("Erreur lors de la lecture des comptes :", error);
-        return [];
     }
+    return banqueCentrale;
 };
 
-// Helper pour sauvegarder les comptes
-const sauvegarderComptes = (comptes) => {
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(comptes, null, 2));
-    } catch (error) {
-        console.error("Erreur lors de la sauvegarde des comptes :", error);
-    }
-};
-
-const creerCompte = (nom, prenom, email, typeCompte = 'courant', codeBanque = BANQUE_DEFAUT) => {
-    const comptes = lireComptes();
-    
+const creerCompte = async (nom, prenom, email, typeCompte = 'courant', codeBanque = BANQUE_DEFAUT, userId = null) => {
     // Validation du code banque
     if (!BANQUES_SUPPORTEES.includes(codeBanque)) {
         throw new Error(`Banque non supportée. Banques valides : ${BANQUES_SUPPORTEES.join(', ')}`);
@@ -81,239 +39,266 @@ const creerCompte = (nom, prenom, email, typeCompte = 'courant', codeBanque = BA
         throw new Error('Type de compte invalide (doit être courant ou epargne)');
     }
 
-    const emailExiste = comptes.find(c => c.email === email);
+    const emailExiste = await prisma.account.findUnique({ where: { email } });
     if (emailExiste) {
         throw new Error('Un compte avec cet email existe déjà');
     }
 
-    const nouveauCompte = {
-        id: comptes.length > 0 ? Math.max(...comptes.map(c => c.id)) + 1 : 1,
-        nom,
-        prenom,
-        email,
-        typeCompte,
-        codeBanque,
-        solde: 0,
-        statut: 'actif',
-        dateCreation: new Date(),
-        transactions: []
-    };
-
-    comptes.push(nouveauCompte);
-    sauvegarderComptes(comptes);
-    return nouveauCompte;
+    return await prisma.account.create({
+        data: {
+            nom,
+            prenom,
+            email,
+            typeCompte,
+            codeBanque,
+            solde: 0,
+            statut: 'actif',
+            userId: userId ? parseInt(userId) : null
+        }
+    });
 };
 
-const getComptes = () => {
-    return lireComptes();
+const getComptes = async () => {
+    await assurerBanqueCentrale();
+    return await prisma.account.findMany();
 };
 
-const getCompte = (id) => {
-    const comptes = lireComptes();
-    return comptes.find(c => c.id === parseInt(id));
+const getCompte = async (id) => {
+    return await prisma.account.findUnique({
+        where: { id: parseInt(id) },
+        include: { transactions: true }
+    });
 };
 
-const deposer = (id, montant) => {
+const deposer = async (id, montant) => {
     if (!montant || montant <= 0) {
         throw new Error('Le montant doit être supérieur à 0');
     }
 
-    const comptes = lireComptes();
-    const index = comptes.findIndex(c => c.id === parseInt(id));
+    return await prisma.$transaction(async (tx) => {
+        const compte = await tx.account.findUnique({ where: { id: parseInt(id) } });
 
-    if (index === -1) {
-        throw new Error('Compte introuvable');
-    }
+        if (!compte) throw new Error('Compte introuvable');
+        if (compte.statut !== 'actif') throw new Error(`Opération impossible : le compte est ${compte.statut}`);
 
-    if (comptes[index].statut !== 'actif') {
-        throw new Error(`Opération impossible : le compte est ${comptes[index].statut}`);
-    }
-
-    comptes[index].solde += montant;
-
-    const transaction = {
-        type: 'depot',
-        montant,
-        date: new Date(),
-        soldeApres: comptes[index].solde
-    };
-
-    comptes[index].transactions.push(transaction);
-    sauvegarderComptes(comptes);
-    return { compte: comptes[index], transaction };
-};
-
-const retirer = (id, montant) => {
-    if (!montant || montant <= 0) {
-        throw new Error('Le montant doit être supérieur à 0');
-    }
-
-    const comptes = lireComptes();
-    const index = comptes.findIndex(c => c.id === parseInt(id));
-    const indexBanque = comptes.findIndex(c => c.id === 0);
-
-    if (index === -1) {
-        throw new Error('Compte introuvable');
-    }
-
-    if (comptes[index].statut !== 'actif') {
-        throw new Error(`Opération impossible : le compte est ${comptes[index].statut}`);
-    }
-
-    // Frais de retrait fixes à 1%
-    const frais = Math.round(montant * 0.01);
-    const totalADebiter = montant + frais;
-
-    if (comptes[index].solde < totalADebiter) {
-        throw new Error(`Solde insuffisant (Nécessaire: ${totalADebiter} FCFA, Solde: ${comptes[index].solde} FCFA)`);
-    }
-
-    // Débit du compte client (montant + frais)
-    comptes[index].solde -= totalADebiter;
-
-    const transaction = {
-        type: 'retrait',
-        montant,
-        frais,
-        date: new Date(),
-        soldeApres: comptes[index].solde
-    };
-
-    comptes[index].transactions.push(transaction);
-
-    // Crédit du compte BANQUE CENTRALE (frais uniquement)
-    if (indexBanque !== -1) {
-        comptes[indexBanque].solde += frais;
-        comptes[indexBanque].transactions.push({
-            type: 'commission_retrait',
-            de: id,
-            montantOriginal: montant,
-            frais,
-            date: new Date(),
-            soldeApres: comptes[indexBanque].solde
+        const updatedCompte = await tx.account.update({
+            where: { id: compte.id },
+            data: { solde: { increment: montant } }
         });
-    }
 
-    sauvegarderComptes(comptes);
-    return { compte: comptes[index], transaction, frais };
+        const transaction = await tx.transaction.create({
+            data: {
+                type: 'depot',
+                montant,
+                soldeApres: updatedCompte.solde,
+                accountId: compte.id
+            }
+        });
+
+        return { compte: updatedCompte, transaction };
+    });
 };
 
-const transferer = (expediteurId, destinataireId, montant) => {
-    if (!expediteurId || !destinataireId || !montant || montant <= 0) {
+const retirer = async (id, montant) => {
+    if (!montant || montant <= 0) {
+        throw new Error('Le montant doit être supérieur à 0');
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        const compte = await tx.account.findUnique({ where: { id: parseInt(id) } });
+        const banque = await tx.account.findUnique({ where: { id: 0 } });
+
+        if (!compte) throw new Error('Compte introuvable');
+        if (compte.statut !== 'actif') throw new Error(`Opération impossible : le compte est ${compte.statut}`);
+
+        const frais = Math.round(montant * 0.01);
+        const totalADebiter = montant + frais;
+
+        if (compte.solde < totalADebiter) {
+            throw new Error(`Solde insuffisant (Nécessaire: ${totalADebiter} FCFA, Solde: ${compte.solde} FCFA)`);
+        }
+
+        // Débit client
+        const updatedCompte = await tx.account.update({
+            where: { id: compte.id },
+            data: { solde: { decrement: totalADebiter } }
+        });
+
+        const transaction = await tx.transaction.create({
+            data: {
+                type: 'retrait',
+                montant,
+                frais,
+                soldeApres: updatedCompte.solde,
+                accountId: compte.id
+            }
+        });
+
+        // Crédit Banque
+        if (banque) {
+            const updatedBanque = await tx.account.update({
+                where: { id: 0 },
+                data: { solde: { increment: frais } }
+            });
+
+            await tx.transaction.create({
+                data: {
+                    type: 'commission_retrait',
+                    montant: frais,
+                    montantOriginal: montant,
+                    frais,
+                    soldeApres: updatedBanque.solde,
+                    accountId: 0,
+                    expediteurId: compte.id
+                }
+            });
+        }
+
+        return { compte: updatedCompte, transaction, frais };
+    });
+};
+
+const transferer = async (expediteurId, destinataireId, montant) => {
+    if (expediteurId == null || destinataireId == null || !montant || montant <= 0) {
         throw new Error('expediteurId, destinataireId et montant (>0) sont obligatoires');
     }
 
-    const comptes = lireComptes();
-    const indexExp = comptes.findIndex(c => c.id === parseInt(expediteurId));
-    const indexDest = comptes.findIndex(c => c.id === parseInt(destinataireId));
-    const indexBanque = comptes.findIndex(c => c.id === 0);
+    return await prisma.$transaction(async (tx) => {
+        const exp = await tx.account.findUnique({ where: { id: parseInt(expediteurId) } });
+        const dest = await tx.account.findUnique({ where: { id: parseInt(destinataireId) } });
+        const banque = await tx.account.findUnique({ where: { id: 0 } });
 
-    if (indexExp === -1) throw new Error('Compte expéditeur introuvable');
-    if (indexDest === -1) throw new Error('Compte destinataire introuvable');
-    if (indexExp === indexDest) throw new Error('Expéditeur et destinataire doivent être différents');
+        if (!exp) throw new Error('Compte expéditeur introuvable');
+        if (!dest) throw new Error('Compte destinataire introuvable');
+        if (exp.id === dest.id) throw new Error('Expéditeur et destinataire doivent être différents');
 
-    if (comptes[indexExp].statut !== 'actif') {
-        throw new Error(`Transfert impossible : le compte expéditeur est ${comptes[indexExp].statut}`);
-    }
+        if (exp.statut !== 'actif') throw new Error(`Transfert impossible : le compte expéditeur est ${exp.statut}`);
+        if (dest.statut !== 'actif') throw new Error(`Transfert impossible : le compte destinataire est ${dest.statut}`);
 
-    if (comptes[indexDest].statut !== 'actif') {
-        throw new Error(`Transfert impossible : le compte destinataire est ${comptes[indexDest].statut}`);
-    }
+        const estInterBanque = exp.codeBanque !== dest.codeBanque;
+        const frais = estInterBanque ? Math.round(montant * 0.01) : 0;
+        const totalADebiter = montant + frais;
 
-    // Calcul des frais
-    // Inter-banque : 1% | Intra-banque : 0%
-    const estInterBanque = comptes[indexExp].codeBanque !== comptes[indexDest].codeBanque;
-    const frais = estInterBanque ? Math.round(montant * 0.01) : 0;
-    const totalADebiter = montant + frais;
+        if (exp.solde < totalADebiter) {
+            const msgFrais = estInterBanque ? ` (incluant ${frais} FCFA de frais inter-banque)` : '';
+            throw new Error(`Solde insuffisant pour couvrir le transfert${msgFrais}. Total nécessaire: ${totalADebiter} FCFA`);
+        }
 
-    if (comptes[indexExp].solde < totalADebiter) {
-        const msgFrais = estInterBanque ? ` (incluant ${frais} FCFA de frais inter-banque)` : '';
-        throw new Error(`Solde insuffisant pour couvrir le transfert${msgFrais}. Total nécessaire: ${totalADebiter} FCFA`);
-    }
+        const typeTransfert = estInterBanque ? 'transfert_inter' : 'transfert_intra';
 
-    // Mise à jour de l'historique avec le type de transfert
-    const typeTransfert = estInterBanque ? 'transfert_inter' : 'transfert_intra';
-
-    // Débit expéditeur (Montant + Frais)
-    comptes[indexExp].solde -= totalADebiter;
-    comptes[indexExp].transactions.push({
-        type: typeTransfert + '_envoye',
-        vers: destinataireId,
-        banqueDest: comptes[indexDest].codeBanque,
-        montant,
-        frais,
-        date: new Date(),
-        soldeApres: comptes[indexExp].solde
-    });
-
-    // Crédit destinataire (Montant uniquement)
-    comptes[indexDest].solde += montant;
-    comptes[indexDest].transactions.push({
-        type: typeTransfert + '_recu',
-        de: expediteurId,
-        banqueExp: comptes[indexExp].codeBanque,
-        montant,
-        date: new Date(),
-        soldeApres: comptes[indexDest].solde
-    });
-
-    // Crédit Banque (Frais uniquement)
-    if (indexBanque !== -1) {
-        comptes[indexBanque].solde += frais;
-        comptes[indexBanque].transactions.push({
-            type: 'commission_transfert',
-            de: expediteurId,
-            vers: destinataireId,
-            montantOriginal: montant,
-            frais,
-            date: new Date(),
-            soldeApres: comptes[indexBanque].solde
+        // Débit Expéditeur
+        const freshExp = await tx.account.update({
+            where: { id: exp.id },
+            data: { solde: { decrement: totalADebiter } }
         });
-    }
 
-    sauvegarderComptes(comptes);
-    return { freshExpediteur: comptes[indexExp], frais };
+        await tx.transaction.create({
+            data: {
+                type: typeTransfert + '_envoye',
+                montant,
+                frais,
+                soldeApres: freshExp.solde,
+                accountId: exp.id,
+                destinataireId: dest.id,
+                banqueTiers: dest.codeBanque
+            }
+        });
+
+        // Crédit Destinataire
+        const freshDest = await tx.account.update({
+            where: { id: dest.id },
+            data: { solde: { increment: montant } }
+        });
+
+        await tx.transaction.create({
+            data: {
+                type: typeTransfert + '_recu',
+                montant,
+                soldeApres: freshDest.solde,
+                accountId: dest.id,
+                expediteurId: exp.id,
+                banqueTiers: exp.codeBanque
+            }
+        });
+
+        // Commission Banque
+        if (frais > 0 && banque) {
+            const freshBanque = await tx.account.update({
+                where: { id: 0 },
+                data: { solde: { increment: frais } }
+            });
+
+            await tx.transaction.create({
+                data: {
+                    type: 'commission_transfert',
+                    montant: frais,
+                    montantOriginal: montant,
+                    frais,
+                    soldeApres: freshBanque.solde,
+                    accountId: 0,
+                    expediteurId: exp.id,
+                    destinataireId: dest.id
+                }
+            });
+        }
+
+        return { freshExpediteur: freshExp, frais };
+    });
 };
 
-const getTransactions = (id) => {
-    const compte = getCompte(id);
-    if (!compte) throw new Error('Compte introuvable');
-    return compte.transactions;
+const getTransactions = async (id) => {
+    const acc = await prisma.account.findUnique({ where: { id: parseInt(id) } });
+    if (!acc) throw new Error('Compte introuvable');
+    return await prisma.transaction.findMany({
+        where: { accountId: acc.id },
+        orderBy: { date: 'desc' }
+    });
 };
 
-const supprimerCompte = (id) => {
+const supprimerCompte = async (id) => {
     const targetId = parseInt(id);
-    if (targetId === 0) {
-        throw new Error('Impossible de supprimer le compte BANQUE CENTRALE');
-    }
+    if (targetId === 0) throw new Error('Impossible de supprimer le compte BANQUE CENTRALE');
 
-    const comptes = lireComptes();
-    const index = comptes.findIndex(c => c.id === targetId);
+    const acc = await prisma.account.findUnique({ where: { id: targetId } });
+    if (!acc) throw new Error('Compte introuvable');
 
-    if (index === -1) {
-        throw new Error('Compte introuvable');
-    }
-
-    const compteSupprime = comptes.splice(index, 1)[0];
-    sauvegarderComptes(comptes);
-    return compteSupprime;
+    // Supprimer les transactions d'abord (contrainte intégrité)
+    await prisma.transaction.deleteMany({ where: { accountId: targetId } });
+    return await prisma.account.delete({ where: { id: targetId } });
 };
 
-const changerStatut = (id, nouveauStatut) => {
-    const comptes = lireComptes();
-    const index = comptes.findIndex(c => c.id === parseInt(id));
-
-    if (index === -1) {
-        throw new Error('Compte introuvable');
-    }
-
+const changerStatut = async (id, nouveauStatut) => {
     if (!['actif', 'suspendu', 'fermé'].includes(nouveauStatut)) {
         throw new Error('Statut invalide (doit être actif, suspendu ou fermé)');
     }
 
-    comptes[index].statut = nouveauStatut;
-    sauvegarderComptes(comptes);
-    return comptes[index];
+    return await prisma.account.update({
+        where: { id: parseInt(id) },
+        data: { statut: nouveauStatut }
+    });
+};
+
+const modifierCompte = async (id, data) => {
+    const acc = await prisma.account.findUnique({ where: { id: parseInt(id) } });
+    if (!acc) throw new Error('Compte introuvable');
+    return await prisma.account.update({
+        where: { id: acc.id },
+        data: data
+    });
+};
+
+const getStatistiques = async () => {
+    const totalComptes = await prisma.account.count();
+    const totalTransactions = await prisma.transaction.count();
+    const totalSolde = await prisma.account.aggregate({
+        _sum: { solde: true }
+    });
+    
+    return {
+        totalComptes,
+        totalTransactions,
+        soldeTotal: totalSolde._sum.solde || 0
+    };
 };
 
 module.exports = {
@@ -326,5 +311,8 @@ module.exports = {
     getTransactions,
     supprimerCompte,
     changerStatut,
+    modifierCompte,
+    getStatistiques,
     BANQUES_SUPPORTEES
 };
+

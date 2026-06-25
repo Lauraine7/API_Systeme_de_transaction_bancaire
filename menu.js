@@ -35,7 +35,7 @@ const menuAction = async () => {
             console.log('Banques disponibles : UBA, ECO, AFB, BIC');
             const codeBanque = (await question('Code Banque (défaut: UBA) : ')).toUpperCase() || 'UBA';
             try {
-                const compte = logic.creerCompte(nom, prenom, email, typeCompte, codeBanque);
+                const compte = await logic.creerCompte(nom, prenom, email, typeCompte, codeBanque);
                 console.log(`Compte créé avec succès ! ID: ${compte.id} [${compte.codeBanque}]`);
             } catch (error) {
                 console.log(` Erreur : ${error.message}`);
@@ -43,7 +43,7 @@ const menuAction = async () => {
             break;
 
         case '2':
-            const comptes = logic.getComptes();
+            const comptes = await logic.getComptes();
             console.log('\n--- LISTE DES COMPTES ---');
             comptes.forEach(c => {
                 const labelStatut = c.statut === 'actif' ? 'ACTIF' : (c.statut === 'suspendu' ? 'SUSPENDU' : 'FERME');
@@ -56,7 +56,7 @@ const menuAction = async () => {
             const idDepot = await question('ID du compte : ');
             const montantDepot = parseFloat(await question('Montant du dépôt : '));
             try {
-                const { compte } = logic.deposer(idDepot, montantDepot);
+                const { compte } = await logic.deposer(idDepot, montantDepot);
                 console.log(` Dépôt réussi ! Nouveau solde : ${compte.solde} FCFA`);
             } catch (error) {
                 console.log(`Erreur : ${error.message}`);
@@ -67,7 +67,7 @@ const menuAction = async () => {
             const idRetrait = await question('ID du compte : ');
             const montantRetrait = parseFloat(await question('Montant du retrait : '));
             try {
-                const { compte, frais } = logic.retirer(idRetrait, montantRetrait);
+                const { compte, frais } = await logic.retirer(idRetrait, montantRetrait);
                 console.log(` Retrait réussi ! (Frais : ${frais} FCFA) Nouveau solde : ${compte.solde} FCFA`);
             } catch (error) {
                 console.log(` Erreur : ${error.message}`);
@@ -79,7 +79,7 @@ const menuAction = async () => {
             const destId = await question('ID destinataire : ');
             const montantTrans = parseFloat(await question('Montant à transférer : '));
             try {
-                const { freshExpediteur, frais } = logic.transferer(expId, destId, montantTrans);
+                const { freshExpediteur, frais } = await logic.transferer(expId, destId, montantTrans);
                 console.log(` Transfert réussi ! Frais: ${frais} FCFA. Votre nouveau solde: ${freshExpediteur.solde} FCFA`);
             } catch (error) {
                 console.log(` Erreur : ${error.message}`);
@@ -89,7 +89,7 @@ const menuAction = async () => {
         case '6':
             const idTrans = await question('ID du compte : ');
             try {
-                const transactions = logic.getTransactions(idTrans);
+                const transactions = await logic.getTransactions(idTrans);
                 console.log(`\n--- HISTORIQUE (Total: ${transactions.length}) ---`);
                 transactions.reverse().slice(0, 10).forEach(t => {
                     const date = new Date(t.date).toLocaleString('fr-FR');
@@ -115,7 +115,7 @@ const menuAction = async () => {
             const confirmation = await question(`Êtes-vous sûr de vouloir supprimer le compte ID ${idASupprimer} ? (y/N) : `);
             if (confirmation.toLowerCase() === 'y') {
                 try {
-                    const compte = logic.supprimerCompte(idASupprimer);
+                    const compte = await logic.supprimerCompte(idASupprimer);
                     console.log(`Compte ID ${compte.id} (${compte.nom} ${compte.prenom}) supprimé avec succès !`);
                 } catch (error) {
                     console.log(`Erreur : ${error.message}`);
@@ -130,7 +130,7 @@ const menuAction = async () => {
             console.log('Nouveau statut possible : actif, suspendu, fermé');
             const nouveauStatut = await question('Entrez le nouveau statut : ');
             try {
-                const compte = logic.changerStatut(idStatut, nouveauStatut);
+                const compte = await logic.changerStatut(idStatut, nouveauStatut);
                 console.log(`Statut du compte ID ${compte.id} mis à jour : ${compte.statut}`);
             } catch (error) {
                 console.log(` Erreur : ${error.message}`);
