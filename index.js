@@ -1,6 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const logic = require('./logic');
+const auth = require('./auth');
+const { authenticateToken, authorizeRole, isOwnerOrAdmin } = require('./middleware/authMiddleware');
 const app = express();
+
+app.use(cors());
+app.use(express.json());
 
 
 // ajout de swagger
@@ -77,6 +83,86 @@ const darkThemeOptions = {
 };
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, darkThemeOptions));
 
+/**
+ * @swagger
+ * /signup:
+ *   post:
+ *     summary: Inscription d'un nouvel utilisateur
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string }
+ *               password: { type: string }
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé
+ */
+app.post('/signup', async (req, res) => {
+    // Attendre: email, password, nom, prenom, et options de compte
+    try {
+        const user = await auth.signup(req.body);
+        res.status(201).json({ message: 'Compte utilisateur créé avec succès', user: { id: user.id, email: user.email, accountId: user.account?.id } });
+    } catch (error) {
+        res.status(400).json({ erreur: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Connexion utilisateur
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string }
+ *               password: { type: string }
+ *     responses:
+ *       200:
+ *         description: Connexion réussie, retourne un token
+ */
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const { user, token } = await auth.login(email, password);
+        res.json({ 
+            message: 'Connexion réussie', 
+            token, 
+            user: { id: user.id, email: user.email, role: user.role, accountId: user.account?.id } 
+        });
+    } catch (error) {
+        res.status(401).json({ erreur: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /admin/signup:
+ *   post:
+ *     summary: Création d'un administrateur (Superadmin seulement)
+ *     tags: [Admin]
+ */
+app.post('/admin/signup', authenticateToken, authorizeRole(['SUPERADMIN']), async (req, res) => {
+    // Route pour que le SUPERADMIN crée d'autres administrateurs
+    const { email, password, nom, prenom } = req.body;
+    try {
+        const user = await auth.createAdmin({ email, password, nom, prenom });
+        res.status(201).json({ message: 'Administrateur créé avec succès', user: { id: user.id, email: user.email } });
+    } catch (error) {
+        res.status(400).json({ erreur: error.message });
+    }
+});
+
 app.use(express.json());
 // ── Route de test ──────────────────────
 app.get('/', (req, res) => {
@@ -117,17 +203,15 @@ app.get('/', (req, res) => {
  *       201:
  *         description: Compte créé avec succès
  */
-app.post('/comptes', (req, res) => {
-    const { nom, prenom, email, typeCompte, codeBanque } = req.body;
+// Création de compte réservée aux administrateurs
+app.post('/admin/comptes', authenticateToken, authorizeRole(['ADMIN', 'SUPERADMIN']), async (req, res) => {
+    const { nom, prenom, email, typeCompte, codeBanque, userId } = req.body;
     try {
         if (!nom || !prenom || !email) {
             return res.status(400).json({ erreur: 'nom, prenom et email sont obligatoires' });
         }
-        const nouveauCompte = logic.creerCompte(nom, prenom, email, typeCompte, codeBanque);
-        res.status(201).json({
-            message: 'Compte créé avec succès !',
-            compte: nouveauCompte
-        });
+        const nouveauCompte = await logic.creerCompte(nom, prenom, email, typeCompte, codeBanque, userId);
+        res.status(201).json({ message: 'Compte créé avec succès !', compte: nouveauCompte });
     } catch (error) {
         res.status(error.message.includes('existe déjà') ? 409 : 400).json({ erreur: error.message });
     }
@@ -143,8 +227,9 @@ app.post('/comptes', (req, res) => {
  *       200:
  *         description: Liste des comptes récupérée avec succès
  */
-app.get('/comptes', (req, res) => {
-    const comptes = logic.getComptes();
+// Lister tous les comptes : Admin seulement
+app.get('/comptes', authenticateToken, authorizeRole(['ADMIN', 'SUPERADMIN']), async (req, res) => {
+    const comptes = await logic.getComptes();
     res.json({
         total: comptes.length,
         comptes: comptes
@@ -170,8 +255,9 @@ app.get('/comptes', (req, res) => {
  *       404:
  *         description: Compte introuvable
  */
-app.get('/comptes/:id', (req, res) => {
-    const compte = logic.getCompte(req.params.id);
+// Détails d'un compte : Propriétaire ou Admin
+app.get('/comptes/:id', authenticateToken, isOwnerOrAdmin, async (req, res) => {
+    const compte = await logic.getCompte(req.params.id);
     if (!compte) {
         return res.status(404).json({ erreur: 'Compte introuvable' });
     }
@@ -194,8 +280,9 @@ app.get('/comptes/:id', (req, res) => {
  *       200:
  *         description: Solde du compte
  */
-app.get('/comptes/:id/solde', (req, res) => {
-    const compte = logic.getCompte(req.params.id);
+// Consulter le solde : Propriétaire ou Admin
+app.get('/comptes/:id/solde', authenticateToken, isOwnerOrAdmin, async (req, res) => {
+    const compte = await logic.getCompte(req.params.id);
     if (!compte) {
         return res.status(404).json({ erreur: 'Compte introuvable' });
     }
@@ -221,9 +308,10 @@ app.get('/comptes/:id/solde', (req, res) => {
  *       200:
  *         description: Compte supprimé
  */
-app.delete('/comptes/:id', (req, res) => {
+// Suppression de compte : Admin seulement
+app.delete('/comptes/:id', authenticateToken, authorizeRole(['ADMIN', 'SUPERADMIN']), async (req, res) => {
     try {
-        const compte = logic.supprimerCompte(req.params.id);
+        const compte = await logic.supprimerCompte(req.params.id);
         res.json({
             message: `Compte ID ${compte.id} supprimé avec succès !`,
             compte
@@ -257,10 +345,11 @@ app.delete('/comptes/:id', (req, res) => {
  *       200:
  *         description: Dépôt réussi
  */
-app.post('/comptes/:id/depot', (req, res) => {
+// Effectuer un dépôt : Propriétaire ou Admin
+app.post('/comptes/:id/depot', authenticateToken, isOwnerOrAdmin, async (req, res) => {
     const { montant } = req.body;
     try {
-        const { compte, transaction } = logic.deposer(req.params.id, montant);
+        const { compte, transaction } = await logic.deposer(req.params.id, montant);
         res.json({
             message: `Dépôt de ${montant} FCFA effectué avec succès !`,
             nouveauSolde: `${compte.solde} FCFA`,
@@ -295,10 +384,11 @@ app.post('/comptes/:id/depot', (req, res) => {
  *       200:
  *         description: Retrait réussi
  */
-app.post('/comptes/:id/retrait', (req, res) => {
+// Effectuer un retrait : Propriétaire ou Admin
+app.post('/comptes/:id/retrait', authenticateToken, isOwnerOrAdmin, async (req, res) => {
     const { montant } = req.body;
     try {
-        const { compte, transaction, frais } = logic.retirer(req.params.id, montant);
+        const { compte, transaction, frais } = await logic.retirer(req.params.id, montant);
         res.json({
             message: `Retrait de ${montant} FCFA effectué avec succès ! (Frais : ${frais} FCFA)`,
             nouveauSolde: `${compte.solde} FCFA`,
@@ -331,18 +421,28 @@ app.post('/comptes/:id/retrait', (req, res) => {
  *       200:
  *         description: Transfert réussi
  */
-app.post('/transfert', (req, res) => {
+// Transférer de l'argent : Propriétaire ou Admin (débit de son propre compte)
+app.post('/transfert', authenticateToken, async (req, res) => {
     const { expediteurId, destinataireId, montant } = req.body;
     try {
-        const { freshExpediteur, frais } = logic.transferer(expediteurId, destinataireId, montant);
+        const isAdmin = ['ADMIN', 'SUPERADMIN'].includes(req.user.role?.toUpperCase());
+        
+        // Un utilisateur lambda ne peut envoyer de l'argent que DEPUIS son propre compte
+        if (!isAdmin && parseInt(expediteurId) !== req.user.accountId) {
+            return res.status(403).json({ erreur: 'Vous ne pouvez effectuer un transfert que depuis votre propre compte' });
+        }
+
+        const { freshExpediteur, frais } = await logic.transferer(expediteurId, destinataireId, montant);
         res.json({
             message: `Transfert de ${montant} FCFA réussi (Frais: ${frais} FCFA)`,
             nouveauSoldeExpediteur: `${freshExpediteur.solde} FCFA`
         });
     } catch (error) {
+        console.log("DEBUG TRANSFER ERROR:", error.message);
+        const msg = (error.message || '').toLowerCase();
         let status = 400;
-        if (error.message.includes('introuvable')) status = 404;
-        else if (error.message.includes('insuffisant')) status = 422;
+        if (msg.includes('introuvable') || msg.includes('not found')) status = 404;
+        else if (msg.includes('insuffisant') || msg.includes('insufficient')) status = 422;
         res.status(status).json({ erreur: error.message });
     }
 });
@@ -363,9 +463,10 @@ app.post('/transfert', (req, res) => {
  *       200:
  *         description: Liste des transactions
  */
-app.get('/comptes/:id/transactions', (req, res) => {
+// Historique des transactions : Propriétaire ou Admin
+app.get('/comptes/:id/transactions', authenticateToken, isOwnerOrAdmin, async (req, res) => {
     try {
-        const transactions = logic.getTransactions(req.params.id);
+        const transactions = await logic.getTransactions(req.params.id);
         res.json({
             total: transactions.length,
             transactions
@@ -377,46 +478,108 @@ app.get('/comptes/:id/transactions', (req, res) => {
 
 /**
  * @swagger
- * /comptes/{id}/statut:
- *   patch:
- *     summary: Changer le statut d'un compte
- *     tags: [Accounts]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               statut: { type: string, enum: [actif, suspendu, fermé] }
- *     responses:
- *       200:
- *         description: Statut mis à jour avec succès
+ * /admin/statistiques:
+ *   get:
+ *     summary: Obtenir les statistiques globales (Admin seulement)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  */
-app.patch('/comptes/:id/statut', (req, res) => {
-    const { statut } = req.body;
+app.get('/admin/statistiques', authenticateToken, authorizeRole(['ADMIN','SUPERADMIN']), async (req, res) => {
+    const stats = await logic.getStatistiques();
+    res.json(stats);
+});
+
+/**
+ * @swagger
+ * /admin/comptes:
+ *   get:
+ *     summary: Lister tous les comptes avec détails (Admin seulement)
+ *     tags: [Admin]
+ */
+app.get('/admin/comptes', authenticateToken, authorizeRole(['ADMIN', 'SUPERADMIN']), async (req, res) => {
+    const counts = await logic.getComptes();
+    const type = req.query.type; // 'USER' or 'ADMIN'
+    
+    if (type === 'USER') {
+        const users = await prisma.user.findMany({ where: { role: 'USER' }, include: { account: true } });
+        return res.json(users.map(u => ({ ...u.account, userRole: u.role })).filter(a => a.id !== undefined));
+    } else if (type === 'ADMIN') {
+        const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPERADMIN'] } }, include: { account: true } });
+        return res.json(admins.map(u => ({ ...u.account, userRole: u.role })).filter(a => a.id !== undefined));
+    }
+    
+    res.json(counts);
+});
+
+/**
+ * @swagger
+ * /admin/comptes/{id}:
+ *   patch:
+ *     summary: Modifier n'importe quel compte (Restrictions sur les admins)
+ *     tags: [Admin]
+ */
+app.patch('/admin/comptes/:id', authenticateToken, authorizeRole(['ADMIN','SUPERADMIN']), async (req, res) => {
     try {
-        const compte = logic.changerStatut(req.params.id, statut);
-        res.json({
-            message: `Statut du compte ID ${compte.id} mis à jour : ${statut}`,
-            compte
-        });
+        const targetAccount = await logic.getCompte(req.params.id);
+        if (!targetAccount) return res.status(404).json({ erreur: 'Compte introuvable' });
+
+        // Un ADMIN ne peut pas modifier un autre ADMIN ou un SUPERADMIN
+        if (req.user.role === 'ADMIN') {
+            const targetUser = await prisma.user.findUnique({ where: { id: targetAccount.userId } });
+            if (targetUser && (targetUser.role === 'ADMIN' || targetUser.role === 'SUPERADMIN')) {
+                return res.status(403).json({ erreur: 'Un administrateur ne peut pas modifier un autre compte administratif' });
+            }
+        }
+
+        const compte = await logic.modifierCompte(req.params.id, req.body);
+        res.json({ message: 'Compte mis à jour par l\'administrateur', compte });
     } catch (error) {
-        res.status(error.message.includes('introuvable') ? 404 : 400).json({ erreur: error.message });
+        res.status(400).json({ erreur: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /admin/comptes/{id}:
+ *   delete:
+ *     summary: Supprimer n'importe quel compte (Restrictions sur les admins)
+ *     tags: [Admin]
+ */
+app.delete('/admin/comptes/:id', authenticateToken, authorizeRole(['ADMIN','SUPERADMIN']), async (req, res) => {
+    try {
+        const targetAccount = await logic.getCompte(req.params.id);
+        if (!targetAccount) return res.status(404).json({ erreur: 'Compte introuvable' });
+
+        // Un ADMIN ne peut pas supprimer un autre ADMIN ou un SUPERADMIN
+        if (req.user.role === 'ADMIN') {
+            const targetUser = await prisma.user.findUnique({ where: { id: targetAccount.userId } });
+            if (targetUser && (targetUser.role === 'ADMIN' || targetUser.role === 'SUPERADMIN')) {
+                return res.status(403).json({ erreur: 'Un administrateur ne peut pas supprimer un autre compte administratif' });
+            }
+        }
+
+        const compte = await logic.supprimerCompte(req.params.id);
+        res.json({ message: 'Compte supprimé par l\'administrateur', compte });
+    } catch (error) {
+        res.status(400).json({ erreur: error.message });
     }
 });
 
 // ── Démarrage du serveur ───────────────
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
-});
+/* v8 ignore next 8 */
+if (require.main === module) {
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, async () => {
+        console.log(`Serveur démarré sur http://localhost:${PORT}`);
+        console.log(`Documentation disponible sur http://localhost:${PORT}/api-docs`);
+        try {
+            await auth.bootstrapSuperadmin();
+        } catch (e) {
+            console.error('Erreur lors du bootstrap:', e);
+        }
+    });
+}
 
-// Garde la boucle d'événements active si elle se vide anormalement
+module.exports = app;
 setInterval(() => {}, 10000);
